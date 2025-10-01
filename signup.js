@@ -108,11 +108,19 @@ function initializeSignupForm() {
             console.log('Group ID:', groupId);
             console.log('Company Name:', companyName);
 
+            // Wait a moment for ThriveStack to be fully ready
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             // Call ThriveStack identify API
+            console.log('🚀 Starting IDENTIFY call...');
             const identifyResult = await sendIdentifyCall(userId, data, userEmail);
             console.log('✅ Identify call completed:', identifyResult);
 
+            // Wait a moment between calls
+            await new Promise(resolve => setTimeout(resolve, 200));
+
             // Call ThriveStack group API
+            console.log('🚀 Starting GROUP call...');
             const groupResult = await sendGroupCall(groupId, userId, data, userEmail, companyName, companyDomain);
             console.log('✅ Group call completed:', groupResult);
 
@@ -226,6 +234,8 @@ async function sendIdentifyCall(userId, data, userEmail) {
 
 async function sendGroupCall(groupId, userId, data, userEmail, companyName, companyDomain) {
     console.log('🟢 Sending GROUP call to ThriveStack...');
+    console.log('ThriveStack available:', !!window.thriveStack);
+    console.log('setGroup method available:', !!(window.thriveStack && window.thriveStack.setGroup));
     
     // Prepare group traits
     const groupTraits = {
@@ -247,21 +257,82 @@ async function sendGroupCall(groupId, userId, data, userEmail, companyName, comp
     });
 
     try {
-        // Use ThriveStack's group method
-        if (window.thriveStack && window.thriveStack.setGroup) {
-            const result = await window.thriveStack.setGroup(
+        // Check if ThriveStack is available
+        if (!window.thriveStack) {
+            throw new Error('ThriveStack not available');
+        }
+        
+        if (!window.thriveStack.setGroup) {
+            throw new Error('setGroup method not available on ThriveStack');
+        }
+
+        console.log('Calling window.thriveStack.setGroup with:', {
+            groupId, 
+            companyDomain,
+            companyName, 
+            groupTraits
+        });
+
+        // Try the ThriveStack method first
+        let result;
+        try {
+            result = await window.thriveStack.setGroup(
                 groupId, 
                 companyDomain,
                 companyName, 
                 groupTraits
             );
-            console.log('✅ GROUP call successful:', result);
-            return result;
-        } else {
-            throw new Error('ThriveStack not initialized');
+            console.log('✅ GROUP call successful via setGroup method:', result);
+        } catch (setGroupError) {
+            console.warn('setGroup method failed, trying direct API call:', setGroupError);
+            
+            // Fallback: Direct API call
+            const groupPayload = [{
+                group_id: groupId,
+                user_id: userId,
+                traits: {
+                    group_type: 'Account',
+                    account_domain: companyDomain,
+                    account_name: companyName,
+                    ...groupTraits
+                },
+                context: {
+                    device_id: window.thriveStack.getDeviceId(),
+                    session_id: window.thriveStack.getSessionId(),
+                    group_id: groupId,
+                    source: window.thriveStack.source || 'marketing'
+                },
+                timestamp: new Date().toISOString()
+            }];
+
+            console.log('Direct group API payload:', groupPayload);
+
+            const response = await fetch('https://azure.dev.app.thrivestack.ai/api/group', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': '5h2FiIEqcqODacChxwHAUHIjeLmIVzQ/ZMNSdkso3XA='
+                },
+                body: JSON.stringify(groupPayload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Direct group API failed: ${response.status} ${response.statusText}`);
+            }
+
+            result = await response.json();
+            console.log('✅ GROUP call successful via direct API:', result);
         }
+        
+        return result;
     } catch (error) {
         console.error('❌ GROUP call failed:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            thriveStack: !!window.thriveStack,
+            setGroup: !!(window.thriveStack && window.thriveStack.setGroup)
+        });
         throw error;
     }
 }
