@@ -138,14 +138,16 @@ sample-app/
 ├── index.html              # Home page
 ├── dashboard.html          # Dashboard page
 ├── signup.html             # Signup/registration page
+├── email-abuse-checker.html # Email abuse checker page
 ├── styles.css              # CSS styles
 ├── script.js               # Main JavaScript with analytics
 ├── signup.js               # Signup form logic with identify/group calls
+├── thrivestack.min.js      # ThriveStack analytics library (local)
 ├── analytics-config.js     # Analytics configuration
 └── README.md               # This file
 ```
 
-**Note:** The app uses the ThriveStack CDN-hosted script (`https://d3cgzwt0fb6o2k.cloudfront.net/latest/thrivestack.js`) which is loaded automatically from the cloud.
+**Note:** The app uses the local ThriveStack script (`thrivestack.min.js`) for offline compatibility and faster loading.
 
 ## Browser Support
 
