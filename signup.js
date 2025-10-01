@@ -97,21 +97,37 @@ function initializeSignupForm() {
                 return;
             }
 
-            // Call ThriveStack identify API
-            await sendIdentifyCall(userId, data, userEmail);
-
-            // Call ThriveStack group API (using name as company for demo)
+            // Generate group ID
             const groupId = generateGroupId(data.fullName);
-            await sendGroupCall(groupId, userId, data);
+            const companyName = data.fullName + "'s Organization";
+            const companyDomain = data.fullName.toLowerCase().replace(/\s+/g, '') + '.com';
 
-            // Track successful signup
+            console.log('📝 Sending Identify and Group calls to ThriveStack...');
+            console.log('User ID:', userId);
+            console.log('User Email:', userEmail);
+            console.log('Group ID:', groupId);
+            console.log('Company Name:', companyName);
+
+            // Call ThriveStack identify API
+            const identifyResult = await sendIdentifyCall(userId, data, userEmail);
+            console.log('✅ Identify call completed:', identifyResult);
+
+            // Call ThriveStack group API
+            const groupResult = await sendGroupCall(groupId, userId, data, userEmail, companyName, companyDomain);
+            console.log('✅ Group call completed:', groupResult);
+
+            // Track successful signup with both IDs
             trackEvent('signup_successful', {
                 user_id: userId,
-                user_name: data.fullName
+                group_id: groupId,
+                user_name: data.fullName,
+                company_name: companyName,
+                identify_sent: !!identifyResult,
+                group_sent: !!groupResult
             });
 
             // Show success message
-            showMessage('Account created successfully! Redirecting to dashboard...', 'success');
+            showMessage('Account created successfully! ✅ User identified and group associated. Redirecting to dashboard...', 'success');
 
             // Redirect to dashboard after 2 seconds
             setTimeout(() => {
@@ -176,61 +192,76 @@ async function checkEmailAbuse(email) {
 }
 
 async function sendIdentifyCall(userId, data, userEmail) {
-    console.log('Sending identify call to ThriveStack...');
+    console.log('🔵 Sending IDENTIFY call to ThriveStack...');
     
     // Prepare user traits
     const userTraits = {
         name: data.fullName,
         email: userEmail,
         signup_date: new Date().toISOString(),
-        has_password: true
+        has_password: true,
+        account_type: 'new_user'
     };
+
+    console.log('Identify payload:', {
+        userId,
+        userEmail,
+        traits: userTraits
+    });
 
     try {
         // Use ThriveStack's identify method
         if (window.thriveStack && window.thriveStack.setUser) {
             const result = await window.thriveStack.setUser(userId, userEmail, userTraits);
-            console.log('Identify call successful:', result);
+            console.log('✅ IDENTIFY call successful:', result);
             return result;
         } else {
             throw new Error('ThriveStack not initialized');
         }
     } catch (error) {
-        console.error('Identify call failed:', error);
+        console.error('❌ IDENTIFY call failed:', error);
         throw error;
     }
 }
 
-async function sendGroupCall(groupId, userId, data) {
-    console.log('Sending group call to ThriveStack...');
+async function sendGroupCall(groupId, userId, data, userEmail, companyName, companyDomain) {
+    console.log('🟢 Sending GROUP call to ThriveStack...');
     
-    // Prepare group traits (using name as organization for demo)
+    // Prepare group traits
     const groupTraits = {
         group_type: 'Account',
-        account_name: data.fullName + "'s Organization",
+        account_name: companyName,
+        account_domain: companyDomain,
         created_at: new Date().toISOString(),
-        primary_contact: data.fullName
+        primary_contact: data.fullName,
+        primary_email: userEmail,
+        plan: 'free',
+        status: 'active'
     };
+
+    console.log('Group payload:', {
+        groupId,
+        companyDomain,
+        companyName,
+        traits: groupTraits
+    });
 
     try {
         // Use ThriveStack's group method
         if (window.thriveStack && window.thriveStack.setGroup) {
-            const companyDomain = data.fullName.toLowerCase().replace(/\s+/g, '') + '.com';
-            const companyName = data.fullName + "'s Organization";
-            
             const result = await window.thriveStack.setGroup(
                 groupId, 
                 companyDomain,
                 companyName, 
                 groupTraits
             );
-            console.log('Group call successful:', result);
+            console.log('✅ GROUP call successful:', result);
             return result;
         } else {
             throw new Error('ThriveStack not initialized');
         }
     } catch (error) {
-        console.error('Group call failed:', error);
+        console.error('❌ GROUP call failed:', error);
         throw error;
     }
 }
