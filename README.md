@@ -7,6 +7,7 @@ A simple web application with comprehensive analytics tracking using ThriveStack
 ### App Features
 - **Home Page**: Welcome page with features showcase
 - **Dashboard Page**: Analytics dashboard with stats and quick actions
+- **Signup Page**: Complete registration form with ThriveStack integration
 - **Responsive Design**: Works on all devices
 - **Modern UI**: Clean, professional interface
 
@@ -56,6 +57,26 @@ A simple web application with comprehensive analytics tracking using ThriveStack
 - `card_hover` - Hovering over feature/stat cards
 - `feature_card_click` - Clicking on feature cards
 - `dashboard_action_click` - Dashboard action button clicks
+
+### Signup Form Events
+- `signup_page_viewed` - Signup page loaded
+- `signup_field_focus` - User focuses on a form field
+- `signup_field_completed` - User completes a form field
+- `signup_form_started` - User begins filling the form
+- `signup_form_submitted` - Form submission attempt
+- `signup_form_validation_failed` - Validation errors
+- `signup_processing` - Account creation in progress
+- `signup_successful` - Account created successfully
+- `signup_failed` - Signup error occurred
+- `signup_form_abandoned` - User left without completing
+- `signup_plan_selected` - User selects a pricing plan
+- `signup_company_size_selected` - Company size selection
+- `signup_industry_selected` - Industry selection
+
+### Identify & Group Calls
+The signup form automatically sends:
+- **Identify Call**: Links the user ID with their email and profile information
+- **Group Call**: Associates the user with their company/organization
 
 ## Customization
 
@@ -116,12 +137,15 @@ window.ThriveStackConfig = {
 sample-app/
 ├── index.html              # Home page
 ├── dashboard.html          # Dashboard page
-├── styles.css             # CSS styles
-├── script.js              # Main JavaScript with analytics
-├── thrivestack.min.js     # ThriveStack analytics library
-├── analytics-config.js    # Analytics configuration
-└── README.md              # This file
+├── signup.html             # Signup/registration page
+├── styles.css              # CSS styles
+├── script.js               # Main JavaScript with analytics
+├── signup.js               # Signup form logic with identify/group calls
+├── analytics-config.js     # Analytics configuration
+└── README.md               # This file
 ```
+
+**Note:** The app uses the ThriveStack CDN-hosted script (`https://d3cgzwt0fb6o2k.cloudfront.net/latest/thrivestack.js`) which is loaded automatically from the cloud.
 
 ## Browser Support
 

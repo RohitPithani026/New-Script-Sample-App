@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - Sample App</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <h1 class="nav-logo">Sample App</h1>
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="index.html" class="nav-link">Home</a>
+          </li>
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a href="signup.html" class="nav-link active">Sign Up</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <section class="signup-section">
+        <div class="signup-container">
+          <div class="signup-header">
+            <h2>Create Your Account</h2>
+            <p>Join us and start tracking your analytics today</p>
+          </div>
+
+          <form id="signupForm" class="signup-form">
+            <div class="form-section">
+              <h3>Personal Information</h3>
+              
+              <div class="form-group">
+                <label for="fullName">Full Name *</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  required
+                  placeholder="John Doe"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  required
+                  placeholder="john@example.com"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  placeholder="+1 (555) 123-4567"
+                />
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Company Information</h3>
+              
+              <div class="form-group">
+                <label for="companyName">Company Name *</label>
+                <input
+                  type="text"
+                  id="companyName"
+                  name="companyName"
+                  required
+                  placeholder="Acme Corp"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="companyDomain">Company Domain *</label>
+                <input
+                  type="text"
+                  id="companyDomain"
+                  name="companyDomain"
+                  required
+                  placeholder="acme.com"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="companySize">Company Size</label>
+                <select id="companySize" name="companySize">
+                  <option value="">Select size</option>
+                  <option value="1-10">1-10 employees</option>
+                  <option value="11-50">11-50 employees</option>
+                  <option value="51-200">51-200 employees</option>
+                  <option value="201-500">201-500 employees</option>
+                  <option value="501+">501+ employees</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="industry">Industry</label>
+                <select id="industry" name="industry">
+                  <option value="">Select industry</option>
+                  <option value="technology">Technology</option>
+                  <option value="finance">Finance</option>
+                  <option value="healthcare">Healthcare</option>
+                  <option value="retail">Retail</option>
+                  <option value="education">Education</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="role">Your Role</label>
+                <input
+                  type="text"
+                  id="role"
+                  name="role"
+                  placeholder="e.g., Product Manager, Developer"
+                />
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Preferences</h3>
+              
+              <div class="form-group">
+                <label for="plan">Select Plan</label>
+                <select id="plan" name="plan">
+                  <option value="free">Free - Basic features</option>
+                  <option value="starter">Starter - $29/month</option>
+                  <option value="professional">Professional - $99/month</option>
+                  <option value="enterprise">Enterprise - Custom pricing</option>
+                </select>
+              </div>
+
+              <div class="form-group checkbox-group">
+                <label>
+                  <input type="checkbox" id="newsletter" name="newsletter" checked />
+                  Subscribe to newsletter for updates and tips
+                </label>
+              </div>
+
+              <div class="form-group checkbox-group">
+                <label>
+                  <input type="checkbox" id="terms" name="terms" required />
+                  I agree to the Terms of Service and Privacy Policy *
+                </label>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="submit-button">
+                Create Account
+              </button>
+              <p class="form-footer">
+                Already have an account? <a href="#">Log in</a>
+              </p>
+            </div>
+
+            <div id="formMessage" class="form-message"></div>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>&copy; 2024 Sample App. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="analytics-config.js"></script>
+    <script
+      src="https://d3cgzwt0fb6o2k.cloudfront.net/latest/thrivestack.js"
+      api-key="5h2FiIEqcqODacChxwHAUHIjeLmIVzQ/ZMNSdkso3XA="
+      source="marketing"
+    ></script>
+    <script src="script.js"></script>
+    <script src="signup.js"></script>
+  </body>
+</html>
