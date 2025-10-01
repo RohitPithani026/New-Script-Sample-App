@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Abuse Checker - Sample App</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <h1 class="nav-logo">Sample App</h1>
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="index.html" class="nav-link">Home</a>
+          </li>
+          <li class="nav-item">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a href="signup.html" class="nav-link">Sign Up</a>
+          </li>
+          <li class="nav-item">
+            <a href="email-abuse-checker.html" class="nav-link active">Email Checker</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="main-content">
+      <section class="signup-section">
+        <div class="signup-container">
+          <div class="signup-header">
+            <h2>Email Abuse Checker</h2>
+            <p>Check if an email address is flagged for abuse</p>
+          </div>
+
+          <div class="signup-form">
+            <div class="form-group">
+              <label for="emailToCheck">Email Address to Check *</label>
+              <input
+                type="email"
+                id="emailToCheck"
+                placeholder="user@example.com"
+                required
+              />
+            </div>
+
+            <div class="form-actions">
+              <button id="checkEmailBtn" class="submit-button">
+                Check Email
+              </button>
+            </div>
+
+            <div id="resultMessage" class="form-message" style="display: none;"></div>
+            
+            <div id="abuseDetails" style="display: none; margin-top: 20px;">
+              <h3 style="color: #667eea; margin-bottom: 15px;">Abuse Check Details</h3>
+              <div id="abuseDetailsContent" style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                <!-- Details will be inserted here -->
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 40px; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+            <h3 style="color: #667eea; margin-bottom: 15px;">How to Use</h3>
+            <ol style="line-height: 2; color: #666;">
+              <li>Enter an email address in the field above</li>
+              <li>Click "Check Email" to run the abuse check</li>
+              <li>The system will query ThriveStack's abuse database</li>
+              <li>Results will show if the email is flagged and the reasons</li>
+            </ol>
+            
+            <h3 style="color: #667eea; margin-top: 30px; margin-bottom: 15px;">Console Usage</h3>
+            <p style="color: #666; margin-bottom: 10px;">You can also check emails programmatically:</p>
+            <pre style="background: #2d3748; color: #48bb78; padding: 15px; border-radius: 8px; overflow-x: auto;"><code>// Check if email is flagged for abuse
+const result = await thriveStack.reportEmailAbuse("user@example.com");
+console.log(result);
+
+// Or use the global function
+const result = await reportEmailAbuse("user@example.com");
+console.log(result);</code></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>&copy; 2024 Sample App. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="analytics-config.js"></script>
+    <script
+      src="https://d3cgzwt0fb6o2k.cloudfront.net/latest/thrivestack.js"
+      api-key="5h2FiIEqcqODacChxwHAUHIjeLmIVzQ/ZMNSdkso3XA="
+      source="marketing"
+    ></script>
+    <script src="script.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const checkBtn = document.getElementById('checkEmailBtn');
+        const emailInput = document.getElementById('emailToCheck');
+        const resultMessage = document.getElementById('resultMessage');
+        const abuseDetails = document.getElementById('abuseDetails');
+        const abuseDetailsContent = document.getElementById('abuseDetailsContent');
+
+        checkBtn.addEventListener('click', async function() {
+          const email = emailInput.value.trim();
+          
+          if (!email || !isValidEmail(email)) {
+            showResult('Please enter a valid email address', 'error');
+            return;
+          }
+
+          // Show loading state
+          checkBtn.textContent = 'Checking...';
+          checkBtn.disabled = true;
+          resultMessage.style.display = 'none';
+          abuseDetails.style.display = 'none';
+
+          try {
+            // Track email check event
+            trackEvent('email_abuse_check_initiated', {
+              page: 'email-checker'
+            });
+
+            // Call ThriveStack's reportEmailAbuse API
+            const result = await thriveStack.reportEmailAbuse(email);
+            
+            console.log('Email abuse check result:', result);
+
+            if (result.success) {
+              const isAbuse = result.data.isAbuse === 1;
+              const reasons = result.data.reasonForAbuse || {};
+              
+              if (isAbuse) {
+                showResult('⚠️ This email is flagged for abuse', 'error');
+                displayAbuseDetails(result.data, email);
+                
+                // Track abuse detected
+                trackEvent('email_abuse_detected', {
+                  page: 'email-checker',
+                  reasons: Object.keys(reasons).filter(k => reasons[k])
+                });
+              } else {
+                showResult('✅ This email is not flagged for abuse', 'success');
+                displayCleanDetails(email);
+                
+                // Track clean email
+                trackEvent('email_abuse_check_clean', {
+                  page: 'email-checker'
+                });
+              }
+            } else {
+              showResult('Error: ' + result.message, 'error');
+            }
+
+          } catch (error) {
+            console.error('Email check error:', error);
+            showResult('An error occurred while checking the email', 'error');
+            
+            // Track error
+            trackEvent('email_abuse_check_failed', {
+              page: 'email-checker',
+              error: error.message
+            });
+          } finally {
+            checkBtn.textContent = 'Check Email';
+            checkBtn.disabled = false;
+          }
+        });
+
+        // Allow Enter key to submit
+        emailInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            checkBtn.click();
+          }
+        });
+
+        function isValidEmail(email) {
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function showResult(message, type) {
+          resultMessage.textContent = message;
+          resultMessage.className = 'form-message ' + type;
+          resultMessage.style.display = 'block';
+        }
+
+        function displayAbuseDetails(data, email) {
+          const reasons = data.reasonForAbuse || {};
+          const activeReasons = Object.keys(reasons).filter(k => reasons[k]);
+          
+          let html = `
+            <div style="margin-bottom: 15px;">
+              <strong style="color: #333;">Email:</strong> 
+              <span style="color: #e53e3e;">${email}</span>
+            </div>
+            <div style="margin-bottom: 15px;">
+              <strong style="color: #333;">Status:</strong> 
+              <span style="color: #e53e3e; font-weight: bold;">Flagged for Abuse</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <strong style="color: #333;">Reasons:</strong>
+            </div>
+            <ul style="color: #666; margin-left: 20px;">
+              ${activeReasons.length > 0 
+                ? activeReasons.map(r => `<li>${formatReason(r)}</li>`).join('')
+                : '<li>General abuse detected</li>'
+              }
+            </ul>
+          `;
+          
+          abuseDetailsContent.innerHTML = html;
+          abuseDetails.style.display = 'block';
+        }
+
+        function displayCleanDetails(email) {
+          let html = `
+            <div style="margin-bottom: 15px;">
+              <strong style="color: #333;">Email:</strong> 
+              <span style="color: #48bb78;">${email}</span>
+            </div>
+            <div style="margin-bottom: 15px;">
+              <strong style="color: #333;">Status:</strong> 
+              <span style="color: #48bb78; font-weight: bold;">Clean - No abuse flags</span>
+            </div>
+            <div style="color: #666;">
+              This email address is not currently flagged in the abuse database.
+            </div>
+          `;
+          
+          abuseDetailsContent.innerHTML = html;
+          abuseDetails.style.display = 'block';
+        }
+
+        function formatReason(reason) {
+          return reason
+            .replace(/_/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        }
+      });
+    </script>
+  </body>
+</html>

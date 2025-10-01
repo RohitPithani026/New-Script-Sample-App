@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Track form field interactions
-    const formFields = document.querySelectorAll('#signupForm input, #signupForm select');
+    const formFields = document.querySelectorAll('#signupForm input');
     formFields.forEach(field => {
         field.addEventListener('focus', function() {
             trackEvent('signup_field_focus', {
@@ -71,30 +71,43 @@ function initializeSignupForm() {
         submitButton.disabled = true;
 
         try {
-            // Generate unique user ID (in production, this would come from your backend)
-            const userId = generateUserId(data.email);
-            const groupId = generateGroupId(data.companyDomain);
+            // Generate unique user ID from name (in production, use your backend)
+            const userId = generateUserId(data.fullName);
+            
+            // Generate email from name for demo purposes
+            const userEmail = generateEmailFromName(data.fullName);
 
             // Track signup attempt
             trackEvent('signup_processing', {
                 user_id: userId,
-                group_id: groupId,
-                plan: data.plan || 'free'
+                user_name: data.fullName
             });
 
-            // Call ThriveStack identify API
-            await sendIdentifyCall(userId, data);
+            // Check for email abuse before proceeding
+            const abuseCheck = await checkEmailAbuse(userEmail);
+            
+            if (abuseCheck.isAbuse) {
+                showMessage('This account cannot be created. Please contact support.', 'error');
+                trackEvent('signup_blocked_abuse', {
+                    user_id: userId,
+                    reason: 'email_abuse_detected'
+                });
+                submitButton.textContent = originalButtonText;
+                submitButton.disabled = false;
+                return;
+            }
 
-            // Call ThriveStack group API
+            // Call ThriveStack identify API
+            await sendIdentifyCall(userId, data, userEmail);
+
+            // Call ThriveStack group API (using name as company for demo)
+            const groupId = generateGroupId(data.fullName);
             await sendGroupCall(groupId, userId, data);
 
             // Track successful signup
             trackEvent('signup_successful', {
                 user_id: userId,
-                group_id: groupId,
-                plan: data.plan || 'free',
-                company_size: data.companySize || 'unknown',
-                industry: data.industry || 'unknown'
+                user_name: data.fullName
             });
 
             // Show success message
@@ -123,47 +136,60 @@ function initializeSignupForm() {
 
 function validateForm(data) {
     // Check required fields
-    const requiredFields = ['fullName', 'email', 'companyName', 'companyDomain'];
-    
-    for (const field of requiredFields) {
-        if (!data[field] || data[field].trim() === '') {
-            return false;
-        }
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
+    if (!data.fullName || data.fullName.trim() === '') {
         return false;
     }
 
-    // Check terms acceptance
-    if (!data.terms) {
+    if (!data.password || data.password.length < 6) {
         return false;
     }
 
     return true;
 }
 
-async function sendIdentifyCall(userId, data) {
+async function checkEmailAbuse(email) {
+    console.log('Checking email abuse for:', email);
+    
+    try {
+        // Use ThriveStack's reportEmailAbuse method
+        if (window.thriveStack && window.thriveStack.reportEmailAbuse) {
+            const result = await window.thriveStack.reportEmailAbuse(email);
+            console.log('Email abuse check result:', result);
+            
+            // Check if the email is flagged as abuse
+            const isAbuse = result.data && result.data.isAbuse === 1;
+            
+            return {
+                isAbuse: isAbuse,
+                reasons: result.data?.reasonForAbuse || {},
+                message: result.message
+            };
+        } else {
+            console.warn('ThriveStack reportEmailAbuse not available');
+            return { isAbuse: false };
+        }
+    } catch (error) {
+        console.error('Email abuse check failed:', error);
+        // Don't block signup if the check fails
+        return { isAbuse: false };
+    }
+}
+
+async function sendIdentifyCall(userId, data, userEmail) {
     console.log('Sending identify call to ThriveStack...');
     
     // Prepare user traits
     const userTraits = {
         name: data.fullName,
-        email: data.email,
-        phone: data.phone || null,
-        role: data.role || null,
-        plan: data.plan || 'free',
-        newsletter_subscribed: data.newsletter === 'on',
+        email: userEmail,
         signup_date: new Date().toISOString(),
-        company_name: data.companyName
+        has_password: true
     };
 
     try {
         // Use ThriveStack's identify method
         if (window.thriveStack && window.thriveStack.setUser) {
-            const result = await window.thriveStack.setUser(userId, data.email, userTraits);
+            const result = await window.thriveStack.setUser(userId, userEmail, userTraits);
             console.log('Identify call successful:', result);
             return result;
         } else {
@@ -178,26 +204,24 @@ async function sendIdentifyCall(userId, data) {
 async function sendGroupCall(groupId, userId, data) {
     console.log('Sending group call to ThriveStack...');
     
-    // Prepare group traits
+    // Prepare group traits (using name as organization for demo)
     const groupTraits = {
         group_type: 'Account',
-        account_name: data.companyName,
-        account_domain: data.companyDomain,
-        company_size: data.companySize || null,
-        industry: data.industry || null,
-        plan: data.plan || 'free',
+        account_name: data.fullName + "'s Organization",
         created_at: new Date().toISOString(),
-        primary_contact: data.fullName,
-        primary_email: data.email
+        primary_contact: data.fullName
     };
 
     try {
         // Use ThriveStack's group method
         if (window.thriveStack && window.thriveStack.setGroup) {
+            const companyDomain = data.fullName.toLowerCase().replace(/\s+/g, '') + '.com';
+            const companyName = data.fullName + "'s Organization";
+            
             const result = await window.thriveStack.setGroup(
                 groupId, 
-                data.companyDomain,
-                data.companyName, 
+                companyDomain,
+                companyName, 
                 groupTraits
             );
             console.log('Group call successful:', result);
@@ -211,16 +235,27 @@ async function sendGroupCall(groupId, userId, data) {
     }
 }
 
-function generateUserId(email) {
-    // In production, use your backend to generate proper user IDs
-    // This is a simple example using email-based ID
-    return 'user_' + btoa(email).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
+function generateUserId(fullName) {
+    // Generate a simple user ID from name
+    const timestamp = Date.now();
+    const nameHash = fullName.toLowerCase().replace(/\s+/g, '_');
+    return `user_${nameHash}_${timestamp}`;
 }
 
-function generateGroupId(domain) {
-    // In production, use your backend to generate proper group IDs
-    // This is a simple example using domain-based ID
-    return 'group_' + btoa(domain).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
+function generateGroupId(fullName) {
+    // Generate a simple group ID from name
+    const nameHash = fullName.toLowerCase().replace(/\s+/g, '_');
+    return `group_${nameHash}`;
+}
+
+function generateEmailFromName(fullName) {
+    // Generate a demo email from name (in production, collect actual email)
+    const nameParts = fullName.toLowerCase().trim().split(/\s+/);
+    if (nameParts.length >= 2) {
+        return `${nameParts[0]}.${nameParts[nameParts.length - 1]}@example.com`;
+    } else {
+        return `${nameParts[0]}@example.com`;
+    }
 }
 
 function showMessage(message, type) {
@@ -241,7 +276,7 @@ let formStarted = false;
 let formInteractionCount = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
-    const formFields = document.querySelectorAll('#signupForm input, #signupForm select');
+    const formFields = document.querySelectorAll('#signupForm input');
     
     formFields.forEach(field => {
         field.addEventListener('input', function() {
@@ -262,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('signupForm');
             const formData = new FormData(form);
             const filledFields = Array.from(formData.entries()).filter(([_, value]) => value).length;
-            const totalFields = form.querySelectorAll('input[required], select[required]').length;
+            const totalFields = form.querySelectorAll('input[required]').length;
             
             trackEvent('signup_form_abandoned', {
                 page: 'signup',
@@ -275,37 +310,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Track plan selection changes
-document.addEventListener('DOMContentLoaded', function() {
-    const planSelect = document.getElementById('plan');
-    if (planSelect) {
-        planSelect.addEventListener('change', function() {
-            trackEvent('signup_plan_selected', {
-                plan: this.value,
-                page: 'signup'
-            });
-        });
+// Utility function to manually report email abuse (can be called from console or other parts of the app)
+async function reportEmailAbuse(email) {
+    console.log('Reporting email abuse for:', email);
+    
+    try {
+        if (window.thriveStack && window.thriveStack.reportEmailAbuse) {
+            const result = await window.thriveStack.reportEmailAbuse(email);
+            console.log('Email abuse report result:', result);
+            return result;
+        } else {
+            throw new Error('ThriveStack not initialized');
+        }
+    } catch (error) {
+        console.error('Email abuse reporting failed:', error);
+        throw error;
     }
+}
 
-    // Track company size selection
-    const companySizeSelect = document.getElementById('companySize');
-    if (companySizeSelect) {
-        companySizeSelect.addEventListener('change', function() {
-            trackEvent('signup_company_size_selected', {
-                company_size: this.value,
-                page: 'signup'
-            });
-        });
-    }
-
-    // Track industry selection
-    const industrySelect = document.getElementById('industry');
-    if (industrySelect) {
-        industrySelect.addEventListener('change', function() {
-            trackEvent('signup_industry_selected', {
-                industry: this.value,
-                page: 'signup'
-            });
-        });
-    }
-});
+// Make reportEmailAbuse available globally
+window.reportEmailAbuse = reportEmailAbuse;

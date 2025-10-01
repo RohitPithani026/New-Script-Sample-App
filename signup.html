@@ -10,17 +10,20 @@
     <nav class="navbar">
       <div class="nav-container">
         <h1 class="nav-logo">Sample App</h1>
-        <ul class="nav-menu">
-          <li class="nav-item">
-            <a href="index.html" class="nav-link">Home</a>
-          </li>
-          <li class="nav-item">
-            <a href="dashboard.html" class="nav-link">Dashboard</a>
-          </li>
-          <li class="nav-item">
-            <a href="signup.html" class="nav-link active">Sign Up</a>
-          </li>
-        </ul>
+         <ul class="nav-menu">
+           <li class="nav-item">
+             <a href="index.html" class="nav-link">Home</a>
+           </li>
+           <li class="nav-item">
+             <a href="dashboard.html" class="nav-link">Dashboard</a>
+           </li>
+           <li class="nav-item">
+             <a href="signup.html" class="nav-link active">Sign Up</a>
+           </li>
+           <li class="nav-item">
+             <a href="email-abuse-checker.html" class="nav-link">Email Checker</a>
+           </li>
+         </ul>
       </div>
     </nav>
 
@@ -33,129 +36,29 @@
           </div>
 
           <form id="signupForm" class="signup-form">
-            <div class="form-section">
-              <h3>Personal Information</h3>
-              
-              <div class="form-group">
-                <label for="fullName">Full Name *</label>
-                <input
-                  type="text"
-                  id="fullName"
-                  name="fullName"
-                  required
-                  placeholder="John Doe"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="email">Email Address *</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  required
-                  placeholder="john@example.com"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  placeholder="+1 (555) 123-4567"
-                />
-              </div>
+            <div class="form-group">
+              <label for="fullName">Full Name *</label>
+              <input
+                type="text"
+                id="fullName"
+                name="fullName"
+                required
+                placeholder="John Doe"
+                autocomplete="name"
+              />
             </div>
 
-            <div class="form-section">
-              <h3>Company Information</h3>
-              
-              <div class="form-group">
-                <label for="companyName">Company Name *</label>
-                <input
-                  type="text"
-                  id="companyName"
-                  name="companyName"
-                  required
-                  placeholder="Acme Corp"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="companyDomain">Company Domain *</label>
-                <input
-                  type="text"
-                  id="companyDomain"
-                  name="companyDomain"
-                  required
-                  placeholder="acme.com"
-                />
-              </div>
-
-              <div class="form-group">
-                <label for="companySize">Company Size</label>
-                <select id="companySize" name="companySize">
-                  <option value="">Select size</option>
-                  <option value="1-10">1-10 employees</option>
-                  <option value="11-50">11-50 employees</option>
-                  <option value="51-200">51-200 employees</option>
-                  <option value="201-500">201-500 employees</option>
-                  <option value="501+">501+ employees</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="industry">Industry</label>
-                <select id="industry" name="industry">
-                  <option value="">Select industry</option>
-                  <option value="technology">Technology</option>
-                  <option value="finance">Finance</option>
-                  <option value="healthcare">Healthcare</option>
-                  <option value="retail">Retail</option>
-                  <option value="education">Education</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="role">Your Role</label>
-                <input
-                  type="text"
-                  id="role"
-                  name="role"
-                  placeholder="e.g., Product Manager, Developer"
-                />
-              </div>
-            </div>
-
-            <div class="form-section">
-              <h3>Preferences</h3>
-              
-              <div class="form-group">
-                <label for="plan">Select Plan</label>
-                <select id="plan" name="plan">
-                  <option value="free">Free - Basic features</option>
-                  <option value="starter">Starter - $29/month</option>
-                  <option value="professional">Professional - $99/month</option>
-                  <option value="enterprise">Enterprise - Custom pricing</option>
-                </select>
-              </div>
-
-              <div class="form-group checkbox-group">
-                <label>
-                  <input type="checkbox" id="newsletter" name="newsletter" checked />
-                  Subscribe to newsletter for updates and tips
-                </label>
-              </div>
-
-              <div class="form-group checkbox-group">
-                <label>
-                  <input type="checkbox" id="terms" name="terms" required />
-                  I agree to the Terms of Service and Privacy Policy *
-                </label>
-              </div>
+            <div class="form-group">
+              <label for="password">Password *</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                placeholder="Enter your password"
+                minlength="6"
+                autocomplete="new-password"
+              />
             </div>
 
             <div class="form-actions">
