@@ -124,7 +124,74 @@ function initializeSignupForm() {
             const groupResult = await sendGroupCall(groupId, userId, data, userEmail, companyName, companyDomain);
             console.log('✅ Group call completed:', groupResult);
 
-            // Track successful signup with both IDs
+            // Send account_created track event to ThriveStack (after group call)
+            if (window.thriveStack && window.thriveStack.track) {
+                console.log('📊 Sending account_created track event...');
+                try {
+                    const accountCreatedEvent = {
+                        "event_name": "account_created",
+                        "properties": {
+                            "account_domain": companyDomain,
+                            "account_id": groupId,
+                            "account_name": companyName
+                        },
+                        "user_id": userId,
+                        "timestamp": new Date().toISOString(),
+                        "context": {
+                            "group_id": groupId  // Ensure this matches the account_id used in the event_name
+                        }
+                    };
+                    
+                    console.log('Account created event payload:', accountCreatedEvent);
+                    const accountTrackResult = await window.thriveStack.track([accountCreatedEvent]);
+                    console.log('✅ account_created track event sent successfully:', accountTrackResult);
+                } catch (accountTrackError) {
+                    console.error('❌ Failed to send account_created track event:', accountTrackError);
+                }
+            } else {
+                console.warn('ThriveStack track method not available for account_created event');
+            }
+
+            // Get UTM parameters if available
+            const urlParams = new URLSearchParams(window.location.search);
+            const utmParams = {
+                utm_campaign: urlParams.get('utm_campaign') || null,
+                utm_medium: urlParams.get('utm_medium') || null,
+                utm_source: urlParams.get('utm_source') || null,
+                utm_term: urlParams.get('utm_term') || null,
+                utm_content: urlParams.get('utm_content') || null
+            };
+
+            // Send signed_up track event to ThriveStack
+            if (window.thriveStack && window.thriveStack.track) {
+                console.log('📊 Sending signed_up track event...');
+                try {
+                    const trackEvent = {
+                        "event_name": "signed_up",
+                        "properties": {
+                            "user_email": userEmail,
+                            "user_name": data.fullName,
+                            "utm_campaign": utmParams.utm_campaign,
+                            "utm_medium": utmParams.utm_medium,
+                            "utm_source": utmParams.utm_source,
+                            "utm_term": utmParams.utm_term,
+                            "utm_content": utmParams.utm_content
+                        },
+                        "user_id": userId,
+                        "timestamp": new Date().toISOString()
+                    };
+                    
+                    console.log('Track event payload:', trackEvent);
+                    const trackResult = await window.thriveStack.track([trackEvent]);
+                    console.log('✅ signed_up track event sent successfully:', trackResult);
+                } catch (trackError) {
+                    console.error('❌ Failed to send signed_up track event:', trackError);
+                }
+            } else {
+                console.warn('ThriveStack track method not available');
+            }
+
+            // Track successful signup with both IDs (custom event)
             trackEvent('signup_successful', {
                 user_id: userId,
                 group_id: groupId,
