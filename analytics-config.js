@@ -3,7 +3,7 @@
 
 window.ThriveStackConfig = {
     // Your ThriveStack API Key - Get this from your ThriveStack dashboard
-    apiKey: '12gYiM/0I/FTLZ0s4K3i7yWNovUa7WKx/Rt/T4l2i44=',
+    apiKey: 'j4ZQCbyJBtk4hkV8WTvPp2frETYbTJEvyKLxjF0VKSw=',
     
     // Source identifier for this app
     source: 'marketing',
