@@ -378,7 +378,7 @@ async function sendGroupCall(groupId, userId, data, userEmail, companyName, comp
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': 'P7bP69DiWd4nJnUv0x1UyrkDt8CtIFY/pqCmJq8dnSc='
+                    'x-api-key': 'X5kftWxWOGvk244jSnzqk1fwkEiIBxoxIa7XaWJJVFI='
                 },
                 body: JSON.stringify(groupPayload)
             });
